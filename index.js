@@ -1,4 +1,4 @@
-const { IP, EP, KP, CD, CP } = require("./DES");
+const { IP, EP, KP, CD, CP, P } = require("./DES");
 
 function text2Binary(text) {
   return Array.from(text)
@@ -87,7 +87,7 @@ function keyEncryption(key) {
     tmp[i].CD = string;
     string = "";
   }
-  console.log(tmp.length);
+  return tmp;
 }
 
 function LSHIFT_28BIT(x, L) {
@@ -95,12 +95,52 @@ function LSHIFT_28BIT(x, L) {
   return x, "0".repeat(28 - a.toString(2).length) + a.toString(2);
 }
 
+function DES(keys, strings) {
+  let R = "";
+  for (let i = 0; i < strings.length; i++) {
+    for (let j = 0; j < P.length; j++) {
+      // L += strings[i].L[P[j] - 1];
+      R += strings[i].R[P[j] - 1];
+    }
+    // strings[i].L = L;
+    strings[i].R = R;
+    R = "";
+  }
+  let _L = "";
+  let _R = "";
+  let f = undefined;
+  for (let i = 0; i < 16; i++) {
+    _L = sep(XOR(strings[0].R, keys[i].CD), 6);
+    for (let j = 0; j < _L.length; j++) {
+      console.log([j]);
+      let a = _L[j][0] + _L[j][5];
+      let b = _L[j].substr(1, 4);
+      console.log(parseInt(a, 2), parseInt(b, 2));
+    }
+  }
+}
+
+function XOR(stringa, stringb) {
+  let c = "";
+  for (let i = 0; i < stringa.length; i++) {
+    if (stringa[i] == stringb[i]) {
+      c += "0";
+    } else {
+      c += "1";
+    }
+  }
+  return c;
+}
+function sep(xs, s) {
+  return xs.length ? [xs.slice(0, s), ...sep(xs.slice(s), s)] : [];
+}
 function main() {
   const string = "Hello World Hello World Hello World";
   const key = "HelloWorld";
   let cryptedArr = middleAction(string);
   cryptedArr = firstEncrypt(cryptedArr, IP);
-  keyEncryption(key);
+  let keysArr = keyEncryption(key);
+  DES(keysArr, cryptedArr);
 }
 
 main();
