@@ -1,4 +1,5 @@
-const { IP, EP, KP, CD, CP, P } = require("./DES");
+const { string } = require("yargs");
+const { IP, KP, CD, CP, P, Sbox, FP } = require("./DES");
 
 function text2Binary(text) {
   return Array.from(text)
@@ -8,10 +9,7 @@ function text2Binary(text) {
 }
 
 function binary2Text(binary) {
-  return binary
-    .split(" ")
-    .map((bin) => String.fromCharCode(parseInt(bin, 2)))
-    .join("");
+  return binary.map((bin) => String.fromCharCode(parseInt(bin, 2))).join("");
 }
 
 function firstEncrypt(cryptedArr, value) {
@@ -95,28 +93,57 @@ function LSHIFT_28BIT(x, L) {
   return x, "0".repeat(28 - a.toString(2).length) + a.toString(2);
 }
 
-function DES(keys, strings) {
-  let R = "";
-  for (let i = 0; i < strings.length; i++) {
-    for (let j = 0; j < P.length; j++) {
-      // L += strings[i].L[P[j] - 1];
-      R += strings[i].R[P[j] - 1];
-    }
-    // strings[i].L = L;
-    strings[i].R = R;
-    R = "";
-  }
+function DES_encrypt(keys, strings) {
   let _L = "";
   let _R = "";
-  let f = undefined;
-  for (let i = 0; i < 16; i++) {
-    _L = sep(XOR(strings[0].R, keys[i].CD), 6);
-    for (let j = 0; j < _L.length; j++) {
-      console.log([j]);
-      let a = _L[j][0] + _L[j][5];
-      let b = _L[j].substr(1, 4);
-      console.log(parseInt(a, 2), parseInt(b, 2));
+  let newStr = [];
+  for (let k = 0; k < strings.length; k++) {
+    for (let i = 0; i < 16; i++) {
+      _R = strings[0].R;
+      let R = "";
+
+      for (let j = 0; j < P.length; j++) {
+        R += strings[k].R[P[j] - 1];
+      }
+      strings[k].R = R;
+      R = "";
+
+      _L = sep(XOR(strings[k].R, keys[i].CD), 6);
+
+      for (let j = 0; j < _L.length; j++) {
+        let [a, b] = [_L[j][0] + _L[j][5], _L[j].substr(1, 4)];
+        [a, b] = [parseInt(a, 2), parseInt(b, 2)];
+        let s = Sbox[j][a][b];
+        s.toString(2).length !== 4
+          ? (s = "0".repeat(4 - s.toString(2).length) + s.toString(2))
+          : (s = s.toString(2));
+        _L[j] = s;
+      }
+      _L = _L.join("");
+      _L = swap(_L, P);
+      [strings[k].R, strings[k].L] = [_L, _R];
     }
+    newStr.push(swap(strings[k].L + strings[k].R, FP));
+  }
+  newStr = sep(newStr.join(""), 8);
+  return newStr;
+  // let string = "";
+  // for (let i = 0; i < newStr.length; i++) {
+  //   string += String.fromCharCode(parseInt(newStr[i], 2));
+  // }
+  // return string;
+}
+
+function DES_decrypt(keys, strings) {
+  let arr = [];
+  strings = sep(strings.join(""), 64);
+  for (let i = 0; i < strings.length; i++) {
+    arr.push({ L: strings[i].substr(0, 32), R: strings[i].substr(32) });
+  }
+  strings = arr;
+
+  for (let i = 0; i < strings.length; i++) {
+    console.log(strings[i].R);
   }
 }
 
@@ -140,7 +167,8 @@ function main() {
   let cryptedArr = middleAction(string);
   cryptedArr = firstEncrypt(cryptedArr, IP);
   let keysArr = keyEncryption(key);
-  DES(keysArr, cryptedArr);
+  let encryptedString = DES_encrypt(keysArr, cryptedArr);
+  DES_decrypt(keysArr, encryptedString);
 }
 
 main();
