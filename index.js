@@ -1,4 +1,3 @@
-const { string } = require("yargs");
 const { IP, KP, CD, CP, P, Sbox, FP } = require("./DES");
 
 function text2Binary(text) {
@@ -96,6 +95,7 @@ function LSHIFT_28BIT(x, L) {
 function DES_encrypt(keys, strings) {
   let _L = "";
   let _R = "";
+  console.log(keys[0].CD.length);
   let newStr = [];
   for (let k = 0; k < strings.length; k++) {
     for (let i = 0; i < 16; i++) {
@@ -134,18 +134,18 @@ function DES_encrypt(keys, strings) {
   // return string;
 }
 
-function DES_decrypt(keys, strings) {
-  let arr = [];
-  strings = sep(strings.join(""), 64);
-  for (let i = 0; i < strings.length; i++) {
-    arr.push({ L: strings[i].substr(0, 32), R: strings[i].substr(32) });
-  }
-  strings = arr;
+// function DES_decrypt(keys, strings) {
+//   let arr = [];
+//   strings = sep(strings.join(""), 64);
+//   for (let i = 0; i < strings.length; i++) {
+//     arr.push({ L: strings[i].substr(0, 32), R: strings[i].substr(32) });
+//   }
+//   strings = arr;
 
-  for (let i = 0; i < strings.length; i++) {
-    console.log(strings[i].R);
-  }
-}
+//   for (let i = 0; i < strings.length; i++) {
+//     console.log(strings[i].R);
+//   }
+// }
 
 function XOR(stringa, stringb) {
   let c = "";
@@ -168,7 +168,7 @@ function main() {
   cryptedArr = firstEncrypt(cryptedArr, IP);
   let keysArr = keyEncryption(key);
   let encryptedString = DES_encrypt(keysArr, cryptedArr);
-  DES_decrypt(keysArr, encryptedString);
+  // DES_decrypt(keysArr, encryptedString);
 }
 
 main();
